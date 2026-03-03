@@ -5,10 +5,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
-# 注册所有消息文件
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/WorldState.msg"
   "msg/BehaviorCmd.msg"
+  "msg/JointCommand.msg"
   DEPENDENCIES std_msgs
 )
 

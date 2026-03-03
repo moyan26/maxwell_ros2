@@ -1,3 +1,6 @@
-# 行为指令
-# 可选值: "search_ball" / "goto_ball" / "get_up"
-string action
+uint8 type
+float32 x
+float32 y
+float32 dir
+bool enable
+string action_name
