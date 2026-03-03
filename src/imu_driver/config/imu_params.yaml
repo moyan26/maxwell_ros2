@@ -1,0 +1,15 @@
+/**:
+  ros__parameters:
+    # 模拟模式（无硬件测试时设为 true）
+    mock_mode: false
+    
+    # 串口设备配置
+    dev_name: "/dev/ttyTHS2"    # IMU 串口设备
+    baudrate: 115200            # 波特率
+    
+    # 摔倒检测参数（角度范围，单位：度）
+    pitch_range: [-30.0, 40.0]  # 俯仰角正常范围
+    roll_range: [-40.0, 40.0]   # 横滚角正常范围
+    
+    # TF 坐标系名称
+    frame_id: "imu_link"

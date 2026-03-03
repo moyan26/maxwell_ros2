@@ -1,0 +1,18 @@
+/**:
+  ros__parameters:
+    # 模拟模式（无硬件测试时设为 true）
+    mock_mode: true
+    
+    # 真实相机设备配置（mock_mode=false 时使用）
+    device_name: "/dev/video0"
+    
+    # 图像参数
+    image_width: 640
+    image_height: 480
+    fps: 30
+    
+    # 模拟图案类型: color_bar(彩色条纹), noise(随机噪声), gradient(渐变)
+    mock_pattern: "color_bar"
+    
+    # TF 坐标系名称
+    frame_id: "camera_link"

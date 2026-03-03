@@ -1,0 +1,39 @@
+/**:
+  ros__parameters:
+    # 模拟模式（无硬件测试时设为 true）
+    mock_mode: true
+    
+    # 真实电机设备配置（mock_mode=false 时使用）
+    device_name: "/dev/ttyUSB0"
+    baudrate: 3000000
+    
+    # 控制参数
+    control_rate: 100.0  # Hz
+    max_speed: 360.0     # 度/秒
+    
+    # 关节名称列表（18个自由度）
+    # 与 data/model/robot.conf 中的定义对应
+    joint_names:
+      # 头部 (2)
+      - jhead1
+      - jhead2
+      # 右臂 (2)
+      - jrshoulder1
+      - jrelbow
+      # 左臂 (2)
+      - jlshoulder1
+      - jlelbow
+      # 右腿 (6)
+      - jrhip3
+      - jrhip2
+      - jrhip1
+      - jrknee
+      - jrankle2
+      - jrankle1
+      # 左腿 (6)
+      - jlhip3
+      - jlhip2
+      - jlhip1
+      - jlknee
+      - jlankle2
+      - jlankle1

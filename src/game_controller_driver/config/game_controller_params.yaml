@@ -1,0 +1,13 @@
+/**:
+  ros__parameters:
+    # 队伍和球员编号
+    team_number: 1
+    player_number: 1
+    
+    # 端口配置（标准 RoboCup Game Controller 端口）
+    receive_port: 3838
+    return_port: 3939
+    
+    # 存活消息配置
+    send_alive: true
+    alive_interval: 1.0  # 秒
