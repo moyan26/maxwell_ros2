@@ -1,6 +1,7 @@
 # Maxwell Robot — ROS2 工作空间
 
 ## 工程结构
+
 ```
 ros2_ws/src/
 ├── maxwell_msgs/              # 自定义消息类型
@@ -18,6 +19,7 @@ ros2_ws/src/
 ```
 
 ## 数据流
+
 ```
 [camera_node]            --/camera/image_raw-----------> [vision_node(B)]
 [imu_node]               --/imu/data------------------> [world_node(B)]
@@ -100,6 +102,7 @@ float32[] velocities   # 关节目标速度
 ```
 
 ## 编译方法
+
 ```bash
 # 编译所有包
 cd ~/ros2_ws
@@ -113,6 +116,7 @@ source ~/ros2_ws/install/setup.bash
 ```
 
 ## 启动方法
+
 ```bash
 # 不带裁判盒（调试用）
 ros2 launch maxwell_bringup play_without_gc.launch.py
@@ -122,6 +126,7 @@ ros2 launch maxwell_bringup play_with_gc.launch.py
 ```
 
 ## 单节点调试（仿真模式）
+
 ```bash
 # 注意：mock_mode 参数类型为 bool，用 true/false
 ros2 run imu_driver imu_node --ros-args -p mock_mode:=true
