@@ -43,15 +43,15 @@ private:
 
     RCLCPP_INFO(
       this->get_logger(),
-      "world_state recv: fall=%d, ball_seen=%d, self(%.2f, %.2f, %.1f)",
+      "world_state recv: fall=%d, ball_visible=%d, self(%.2f, %.2f, %.1f)",
       msg->fall_direction,
-      msg->ball_seen,
-      msg->self_x, msg->self_y, msg->self_dir_deg);
+      msg->ball.visible,
+      msg->self_pose.x, msg->self_pose.y, msg->self_pose.theta);
 
     // 最小决策逻辑：摔倒优先，其次看到球去球，否则找球
     if (msg->fall_direction != 0) {
       current_state_ = "get_up";
-    } else if (msg->ball_seen) {
+    } else if (msg->ball.visible) {
       current_state_ = "goto_ball";
     } else {
       current_state_ = "search_ball";
