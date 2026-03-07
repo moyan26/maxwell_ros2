@@ -3,22 +3,19 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
-
         # 传感器层
-        Node(package='maxwell_sensors', executable='imu_node',        name='imu_node'),
-        Node(package='maxwell_sensors', executable='camera_node',     name='camera_node'),
-        Node(package='maxwell_sensors', executable='motor_node',      name='motor_node'),
-        Node(package='maxwell_sensors', executable='game_ctrl_node',  name='game_ctrl_node'),
-
-        # 感知层
-        Node(package='maxwell_vision',  executable='vision_node',     name='vision_node'),
-
+        Node(package='imu_driver',             executable='imu_node',             name='imu_node',
+             parameters=[{'mock_mode': True}]),
+        Node(package='camera_driver',          executable='camera_node',          name='camera_node',
+             parameters=[{'mock_mode': True}]),
+        Node(package='motor_driver',           executable='motor_node',           name='motor_node',
+             parameters=[{'mock_mode': True}]),
+        Node(package='game_controller_driver', executable='game_controller_node', name='game_ctrl_node',
+             parameters=[{'mock_mode': True}]),
         # 状态层
-        Node(package='maxwell_world',   executable='world_node',      name='world_node'),
-
+        Node(package='maxwell_world',          executable='worldmodel_node',      name='world_node'),
         # 决策层
-        Node(package='maxwell_behavior',executable='fsm_node',        name='fsm_node'),
-
+        Node(package='maxwell_behavior',       executable='fsm_node',             name='fsm_node'),
         # 执行层
-        Node(package='maxwell_motion',  executable='walk_node',       name='walk_node'),
+        Node(package='maxwell_motion',         executable='walk_node',            name='walk_node'),
     ])
