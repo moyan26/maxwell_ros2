@@ -1,6 +1,6 @@
 #ifndef __VISION_HPP
 #define __VISION_HPP
-#include <Eigen/Dense>
+
 #include <atomic>
 #include <map>
 #include <mutex>
@@ -151,9 +151,6 @@ private:
     float ball_prob_{0.0f}, post_prob_{0.0f};
     int min_ball_w_{0}, min_ball_h_{0};
     int min_post_w_{0}, min_post_h_{0};
-
-    // odometry compensation
-    Eigen::Vector2d odometry_offset_;
 
     int cant_see_ball_count_{0};
     int can_see_post_count_{0};

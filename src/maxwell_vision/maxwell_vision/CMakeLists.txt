@@ -16,18 +16,19 @@ find_package(maxwell_msgs REQUIRED)
 
 # Image -> cv::Mat
 find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
+find_package(cv_bridge REQUIRED)
 
 find_package(Threads REQUIRED)
 
-# ---------- Runtime switch ----------
+# ---------- Runtime / CUDA switches ----------
 # ON  : robot runtime build (needs imageproc/darknet/SL and usually CUDA)
 # OFF : compile-only build on dev VM (no third-party vision libs)
 option(MAXWELL_VISION_RUNTIME "Build full vision runtime pipeline" ON)
 
-# ---- CUDA switch (robot runtime) ----
+# CUDA switch (only meaningful when runtime is ON)
 option(MAXWELL_ENABLE_CUDA "Enable CUDA pipeline (robot runtime)" OFF)
 
-# If runtime is OFF, force CUDA OFF so we never try to find/link CUDA
+# If not building runtime, force CUDA off so we never try to find/link CUDA
 if(NOT MAXWELL_VISION_RUNTIME)
   set(MAXWELL_ENABLE_CUDA OFF CACHE BOOL "Enable CUDA pipeline" FORCE)
 endif()
@@ -36,7 +37,7 @@ if(MAXWELL_ENABLE_CUDA)
   find_package(CUDAToolkit REQUIRED)
 endif()
 
-# Core headers/libs
+# Core headers/libs (header-only or real)
 find_package(maxwell_core REQUIRED)
 
 # Optional: enable remote server streaming (requires tcp.hpp + libserver)
@@ -44,6 +45,7 @@ option(MAXWELL_WITH_SERVER "Enable remote server streaming in vision_core" OFF)
 
 # ---------- Third-party / legacy libs (ONLY for runtime build) ----------
 if(MAXWELL_VISION_RUNTIME)
+  # These are required for your legacy vision.cpp implementation
   find_library(IMAGEPROC_LIB imageproc REQUIRED)
   find_library(DARKNET_LIB darknet REQUIRED)
   find_library(SL_LIB SL REQUIRED)
@@ -51,6 +53,7 @@ if(MAXWELL_VISION_RUNTIME)
   # Optional server lib
   find_library(SERVER_LIB server)
 
+  # Try to locate include dirs for darknet/imageproc if they are not already exported elsewhere
   find_path(DARKNET_INCLUDE_DIR darknet/network.h)
   find_path(IMAGEPROC_INCLUDE_DIR imageproc/imageproc.hpp)
 endif()
@@ -60,6 +63,7 @@ add_library(vision_core SHARED
   vision.cpp
 )
 
+# Compile definitions
 target_compile_definitions(vision_core PUBLIC
   MAXWELL_ROS2
   MAXWELL_VISION_RUNTIME=$<BOOL:${MAXWELL_VISION_RUNTIME}>
@@ -75,6 +79,7 @@ target_include_directories(vision_core PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
+# Add third-party include dirs only when runtime build is enabled
 if(MAXWELL_VISION_RUNTIME)
   if(DARKNET_INCLUDE_DIR)
     target_include_directories(vision_core PUBLIC ${DARKNET_INCLUDE_DIR})
@@ -88,6 +93,7 @@ ament_target_dependencies(vision_core
   rclcpp
   sensor_msgs
   std_msgs
+  cv_bridge
   maxwell_msgs
   maxwell_core
 )
@@ -98,7 +104,7 @@ target_link_libraries(vision_core
   Threads::Threads
 )
 
-# Only link legacy libs when runtime is ON
+# Link legacy libs only in runtime mode
 if(MAXWELL_VISION_RUNTIME)
   target_link_libraries(vision_core
     ${IMAGEPROC_LIB}
@@ -115,6 +121,7 @@ if(MAXWELL_VISION_RUNTIME)
   endif()
 endif()
 
+# rt: some platforms need it; safe on Linux
 if(UNIX AND NOT APPLE)
   target_link_libraries(vision_core rt)
 endif()
@@ -128,6 +135,7 @@ ament_target_dependencies(vision_node
   rclcpp
   sensor_msgs
   std_msgs
+  cv_bridge
   maxwell_msgs
 )
 

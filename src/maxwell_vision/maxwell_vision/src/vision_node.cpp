@@ -1,18 +1,22 @@
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
-#include <sensor_msgs/image_encodings.hpp>
-
-#include <opencv2/core.hpp>
+#include <cv_bridge/cv_bridge.hpp>
 #include <opencv2/imgproc.hpp>
+#include <builtin_interfaces/msg/time.hpp>
 
 #include "maxwell_msgs/msg/ball.hpp"
 #include "vision.hpp"
 
-// If the build system doesn't define it for this target, assume runtime build.
 #ifndef MAXWELL_VISION_RUNTIME
+// If the build system doesn't define it for this target, assume runtime build.
 #define MAXWELL_VISION_RUNTIME 1
 #endif
 
+// ROS2 vision_node:
+// - subscribe /camera/image_raw
+// - feed frames to Vision::set_bgr_frame()
+// - timer calls Vision::process_once()
+// - publish /vision/ball using maxwell_msgs/Ball
 class VisionNode final : public rclcpp::Node
 {
 public:
@@ -20,6 +24,7 @@ public:
   {
     publish_hz_ = this->declare_parameter<double>("publish_hz", 30.0);
 
+    // Start vision core once
 #if MAXWELL_VISION_RUNTIME
     if (!VISION->start())
     {
@@ -56,118 +61,62 @@ public:
   }
 
 private:
-  static bool to_bgr8(const sensor_msgs::msg::Image& msg, cv::Mat& out_bgr)
-  {
-    using sensor_msgs::image_encodings::BGR8;
-    using sensor_msgs::image_encodings::RGB8;
-    using sensor_msgs::image_encodings::MONO8;
-    using sensor_msgs::image_encodings::BGRA8;
-    using sensor_msgs::image_encodings::RGBA8;
-
-    if (msg.data.empty() || msg.height == 0 || msg.width == 0) return false;
-
-    // Wrap raw buffer as cv::Mat with stride = step
-    const int h = static_cast<int>(msg.height);
-    const int w = static_cast<int>(msg.width);
-
-    const std::string& enc = msg.encoding;
-
-    if (enc == BGR8)
-    {
-      cv::Mat bgr(h, w, CV_8UC3, const_cast<unsigned char*>(msg.data.data()), msg.step);
-      out_bgr = bgr;
-      return true;
-    }
-    if (enc == RGB8)
-    {
-      cv::Mat rgb(h, w, CV_8UC3, const_cast<unsigned char*>(msg.data.data()), msg.step);
-      cv::cvtColor(rgb, out_bgr, cv::COLOR_RGB2BGR);
-      return true;
-    }
-    if (enc == MONO8)
-    {
-      cv::Mat gray(h, w, CV_8UC1, const_cast<unsigned char*>(msg.data.data()), msg.step);
-      cv::cvtColor(gray, out_bgr, cv::COLOR_GRAY2BGR);
-      return true;
-    }
-    if (enc == BGRA8)
-    {
-      cv::Mat bgra(h, w, CV_8UC4, const_cast<unsigned char*>(msg.data.data()), msg.step);
-      cv::cvtColor(bgra, out_bgr, cv::COLOR_BGRA2BGR);
-      return true;
-    }
-    if (enc == RGBA8)
-    {
-      cv::Mat rgba(h, w, CV_8UC4, const_cast<unsigned char*>(msg.data.data()), msg.step);
-      cv::cvtColor(rgba, out_bgr, cv::COLOR_RGBA2BGR);
-      return true;
-    }
-
-    // Common YUYV/YUV422 encodings (names differ across drivers)
-    if (enc == "yuyv" || enc == "yuv422" || enc == "yuv422_yuy2" || enc == "yuy2")
-    {
-      // YUY2/YUYV is 2 bytes per pixel -> CV_8UC2
-      cv::Mat yuy2(h, w, CV_8UC2, const_cast<unsigned char*>(msg.data.data()), msg.step);
-      cv::cvtColor(yuy2, out_bgr, cv::COLOR_YUV2BGR_YUY2);
-      return true;
-    }
-
-    return false;
-  }
-
   void on_image(const sensor_msgs::msg::Image::SharedPtr& msg)
   {
+    // Convert to BGR8 cv::Mat
     cv::Mat bgr;
-    if (!to_bgr8(*msg, bgr))
+    try
+    {
+      // If source encoding already bgr8, this is a cheap view. Otherwise converts.
+      bgr = cv_bridge::toCvCopy(msg, "bgr8")->image;
+    }
+    catch (const std::exception& e)
     {
       RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
-                           "Unsupported image encoding: '%s' (need bgr8/rgb8/mono8/bgra8/rgba8/yuyv).",
-                           msg->encoding.c_str());
+                           "cv_bridge conversion failed: %s", e.what());
       return;
     }
 
-    // Feed frame into core (Vision will copy data into its own buffer)
+    // Feed frame into core (thread-safe)
     VISION->set_bgr_frame(bgr);
 
+    // Keep latest header for publishing
     last_header_stamp_ = msg->header.stamp;
     last_header_frame_ = msg->header.frame_id;
   }
 
   void on_timer()
   {
+    // Run one inference step
     VISION->process_once();
 
+    // Publish best ball (if any)
     object_det det;
     maxwell_msgs::msg::Ball out;
 
-    if (last_header_stamp_.sec == 0 && last_header_stamp_.nanosec == 0)
-    {
-      const rclcpp::Time now_t = this->get_clock()->now();
-      builtin_interfaces::msg::Time now_msg;
-      now_msg.sec = static_cast<int32_t>(now_t.seconds());  // 秒
-      now_msg.nanosec = static_cast<uint32_t>(now_t.nanoseconds() % 1000000000LL);  // 纳秒
-      out.header.stamp = now_msg; 
-    }
-    else
-    {
-      out.header.stamp = last_header_stamp_;
-    }
+    out.header.stamp = (last_header_stamp_.sec == 0 && last_header_stamp_.nanosec == 0)
+                         ? this->now()
+                         : last_header_stamp_;
     out.header.frame_id = last_header_frame_.empty() ? "camera" : last_header_frame_;
 
     if (VISION->get_best_ball(det))
     {
       out.visible = true;
+
+      // Pixel: use bottom-center of bbox (consistent with legacy debug drawing)
       const int px = det.x + det.w / 2;
       const int py = det.y + det.h;
 
       out.pixel_x = px;
       out.pixel_y = py;
 
+      // No odometry/head pose in ROS2 vision_node MVP, so positions left as 0.
       out.global_x = 0.0f;
       out.global_y = 0.0f;
       out.self_x = 0.0f;
       out.self_y = 0.0f;
 
+      // Approx alpha/beta from image center (fallback; exact cx/cy is internal)
       const float w = static_cast<float>(std::max(1, VISION->w()));
       const float h = static_cast<float>(std::max(1, VISION->h()));
       out.alpha = (static_cast<float>(px) - 0.5f * w) / w;
@@ -178,9 +127,12 @@ private:
       out.visible = false;
       out.pixel_x = -1;
       out.pixel_y = -1;
-      out.global_x = out.global_y = 0.0f;
-      out.self_x = out.self_y = 0.0f;
-      out.alpha = out.beta = 0.0f;
+      out.global_x = 0.0f;
+      out.global_y = 0.0f;
+      out.self_x = 0.0f;
+      out.self_y = 0.0f;
+      out.alpha = 0.0f;
+      out.beta  = 0.0f;
     }
 
     pub_ball_->publish(out);
@@ -204,3 +156,4 @@ int main(int argc, char** argv)
   rclcpp::shutdown();
   return 0;
 }
+

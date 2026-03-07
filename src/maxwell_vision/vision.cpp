@@ -1,7 +1,10 @@
 #include "vision.hpp"
 #include "parser/parser.hpp"
-#include "darknet/parser.h"
-#include <cuda_runtime.h>
+#if defined(MAXWELL_ENABLE_CUDA) && MAXWELL_ENABLE_CUDA
+  #include "darknet/parser.h"
+  #include <cuda_runtime.h>
+  #include "imageproc/imageproc.hpp"
+#endif
 #ifdef MAXWELL_WITH_SERVER
 #include "server/server.hpp"
 #endif
@@ -9,7 +12,6 @@
 #ifndef MAXWELL_ROS2
 #include "core/worldmodel.hpp"
 #endif
-#include "imageproc/imageproc.hpp"
 #include <fstream>
 #include <opencv2/imgproc.hpp>
 
@@ -18,7 +20,9 @@ using namespace cv;
 using namespace robot_math;
 using namespace Eigen;
 using namespace robot;
+#if defined(MAXWELL_ENABLE_CUDA) && MAXWELL_ENABLE_CUDA
 using namespace imgproc;
+#endif
 
 Vision::Vision() : Timer(CONF->get_config_value<int>("vision_period"))
 {
@@ -223,6 +227,11 @@ void Vision::get_point_dis(int x, int y)
 
 void Vision::run()
 {
+#if !(defined(MAXWELL_ENABLE_CUDA) && MAXWELL_ENABLE_CUDA)
+    // compile-only build: no inference
+    return;
+#else
+    // ---- 原来的 run() 内容一字不动放这里 ----
     if (is_alive_)
     {
         if (camera_src_ == nullptr)
@@ -502,6 +511,7 @@ void Vision::run()
 
         is_busy_ = false;
     }
+#endif
 }
 
 void Vision::send_image(const cv::Mat &src)
@@ -600,9 +610,15 @@ void Vision::updata(const pub_ptr &pub, const int &type)
 }
 #endif
 
-
 bool Vision::start()
 {
+#if !(defined(MAXWELL_ENABLE_CUDA) && MAXWELL_ENABLE_CUDA)
+    LOG(LOG_WARN) << setw(12) << "algorithm:" << setw(18) << "[vision]"
+                  << " built without CUDA (MAXWELL_ENABLE_CUDA=OFF). start() disabled." << endll;
+    is_alive_ = false;
+    return false;
+#else
+    // ---- 原来的 start() 内容一字不动放这里 ----
     net_.gpu_index = 0;
     net_ = parse_network_cfg_custom((char *)CONF->get_config_value<string>("net_cfg_file").c_str(), 1);
     load_weights(&net_, (char *)CONF->get_config_value<string>("net_weights_file").c_str());
@@ -655,10 +671,17 @@ bool Vision::start()
     start_timer();
 #endif
     return true;
+#endif
 }
 
 void Vision::stop()
 {
+#if !(defined(MAXWELL_ENABLE_CUDA) && MAXWELL_ENABLE_CUDA)
+    if (camera_src_ != nullptr) { free(camera_src_); camera_src_ = nullptr; }
+    is_alive_ = false;
+    return;
+#else
+    // ---- 原来的 stop() 内容一字不动放这里 ----
     if (is_alive_)
     {
 #ifndef MAXWELL_ROS2
@@ -681,4 +704,6 @@ void Vision::stop()
         cudaFree(pMapyData);
     }
     is_alive_ = false;
+#endif
 }
+
