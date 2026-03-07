@@ -184,19 +184,4 @@ find_package(maxwell_msgs REQUIRED)
 - \`mock_mode\` 参数类型为 bool，启动时用 \`--ros-args -p mock_mode:=true\`
 - 编译完成后必须重新 \`source ~/ros2_ws/install/setup.bash\`
 
-## 当前进度
 
-| 包 | 状态 | 负责人 |
-|----|------|--------|
-| maxwell_msgs | ✅ 完成 | D组 |
-| maxwell_bringup | ✅ 完成 | D组 |
-| imu_driver | ✅ 验证通过 | A组 |
-| camera_driver | ✅ 验证通过 | A组 |
-| game_controller_driver | ✅ 验证通过 | A组 |
-| motor_driver | ✅ 验证通过 | A组 |
-| maxwell_behavior | ✅ 验证通过 | C组 |
-| maxwell_motion | ✅ 验证通过 | C组 |
-| maxwell_world | ✅ 验证通过 | B组 |
-| maxwell_vision | ⏳ 需CUDA，待上机器人编译 | B组 |
-| maxwell_core | ⏳ 待填充 | D组 |
-| maxwell_remote | ⏳ 待填充 | D组 |
