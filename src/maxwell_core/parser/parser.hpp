@@ -1,6 +1,8 @@
 #ifndef __PARSER_HPP
 #define __PAESER_HPP
 
+#define BOOST_BIND_GLOBAL_PLACEHOLDERS 1  // 消除 boost 占位符弃用告警，保持原有行为
+
 #include <unordered_map>
 #include <unordered_set>
 #include <boost/property_tree/ptree.hpp>

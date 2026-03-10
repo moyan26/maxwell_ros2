@@ -23,7 +23,8 @@ find_package(Threads REQUIRED)
 # ---------- Runtime / CUDA switches ----------
 # ON  : robot runtime build (needs imageproc/darknet/SL and usually CUDA)
 # OFF : compile-only build on dev VM (no third-party vision libs)
-option(MAXWELL_VISION_RUNTIME "Build full vision runtime pipeline" ON)
+# Default OFF so that anyone with ROS2 can build the workspace without custom libs.
+option(MAXWELL_VISION_RUNTIME "Build full vision runtime pipeline" OFF)
 
 # CUDA switch (only meaningful when runtime is ON)
 option(MAXWELL_ENABLE_CUDA "Enable CUDA pipeline (robot runtime)" OFF)

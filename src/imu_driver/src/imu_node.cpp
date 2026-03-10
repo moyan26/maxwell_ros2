@@ -19,8 +19,8 @@ enum DecodeStatus
 
 ImuNode::ImuNode(const rclcpp::NodeOptions &options)
     : Node("imu_node", options)
-    , serial_(io_service_)
     , init_dir_(0.0)
+    , serial_(io_service_)
 {
     // ============== 声明并获取参数 ==============
     // 替代原来的 CONF->get_config_value

@@ -16,4 +16,8 @@
 
   <!-- OpenCV is usually resolved via system dependency; keep as exec/build depend for clarity -->
   <exec_depend>opencv</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

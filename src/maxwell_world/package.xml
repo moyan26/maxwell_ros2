@@ -15,4 +15,8 @@
   <depend>tf2</depend>
   <depend>maxwell_msgs</depend>
 
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
 </package>

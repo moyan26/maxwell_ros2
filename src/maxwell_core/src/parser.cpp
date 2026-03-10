@@ -525,6 +525,7 @@ namespace parser
         {
             jmap[offset.first]->offset_ = offset.second.get_value<float>();
         }
+        return true;
     }
 
     void save(const std::string &filename, const robot::joint_map &jmap)
