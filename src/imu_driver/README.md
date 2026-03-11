@@ -44,7 +44,7 @@ ros2 run imu_driver imu_node --ros-args -p mock_mode:=true
 ### 其他方法：（以下方法中的命令行内容还需调整）
 ### 3. 使用 launch 文件
 ```bash
-ros2 launch imu_driver imu_launch.py
+ros2 launch imu_driver imu.launch.py
 ```
 
 ### 4. 使用自定义参数
@@ -123,7 +123,7 @@ imu_driver/
 │   ├── imu_driver_main.cpp   # 主函数
 │   └── imu_subscriber_example.cpp  # 订阅示例
 ├── launch/
-│   └── imu_launch.py     # 启动文件
+│   └── imu.launch.py     # 启动文件
 ├── config/
 │   └── imu_params.yaml   # 参数配置
 ├── CMakeLists.txt

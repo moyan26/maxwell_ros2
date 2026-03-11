@@ -5,7 +5,6 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    # 声明参数
     team_number_arg = DeclareLaunchArgument(
         'team_number',
         default_value='1',
@@ -24,7 +23,6 @@ def generate_launch_description():
         description='Enable mock mode for testing'
     )
 
-    # Game Controller 接收节点
     game_controller_node = Node(
         package='game_controller_driver',
         executable='game_controller_node',
@@ -40,7 +38,6 @@ def generate_launch_description():
         }]
     )
 
-    # Mock 模式下的模拟发送器
     game_controller_mock = Node(
         package='game_controller_driver',
         executable='game_controller_mock',
@@ -48,7 +45,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'team_number': LaunchConfiguration('team_number'),
-            'state_interval': 10.0  # 状态切换间隔（秒）
+            'state_interval': 10.0
         }],
         condition=IfCondition(LaunchConfiguration('mock_mode'))
     )

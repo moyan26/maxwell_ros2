@@ -4,7 +4,6 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    # 声明参数
     mock_mode_arg = DeclareLaunchArgument(
         'mock_mode',
         default_value='true',
@@ -23,7 +22,6 @@ def generate_launch_description():
         description='Mock pattern: color_bar, noise, or gradient'
     )
 
-    # 创建节点
     camera_node = Node(
         package='camera_driver',
         executable='camera_node',
