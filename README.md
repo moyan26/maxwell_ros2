@@ -128,7 +128,7 @@ colcon build
 
 # 编译后激活环境（任选一种方式，一次即可）
 source install/local_setup.bash
-# 或 source start.sh
+# 或 source start.sh 或 ros2start
 ```
 
 说明：`maxwell_world`/`maxwell_vision` 已补全 `<export><build_type>ament_cmake</build_type></export>`，修复 isolated install 下环境脚本漏包导致的 `ros2 launch` 闪退问题。
