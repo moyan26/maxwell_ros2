@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>maxwell_core</name>
+  <version>0.0.0</version>
+  <description>Maxwell core headers (header-only) for ROS 2 build.</description>
+
+  <maintainer email="todo@todo.todo">todo</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- If your headers use Eigen (math.hpp often does), keep these -->
+  <build_depend>eigen3_cmake_module</build_depend>
+  <build_depend>libeigen3-dev</build_depend>
+  <exec_depend>libeigen3-dev</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
